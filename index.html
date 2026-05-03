@@ -1,101 +1,22 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-<meta charset="UTF-8">
-<title>Préhistoire Interactive</title>
-
-<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
-
-<style>
-body { font-family: Arial; margin: 0; padding: 20px; }
-
-.timeline-container {
-  overflow-x: auto;
-  border-bottom: 3px solid black;
-  margin-bottom: 20px;
-}
-
-.timeline {
-  position: relative;
-  height: 120px;
-  width: 2000px;
-}
-
-.event {
-  position: absolute;
-  top: 40px;
-  transform: translateX(-50%);
-  padding: 6px 10px;
-  border-radius: 10px;
-  cursor: pointer;
-  font-size: 13px;
-  color: white;
-}
-
-/* couleurs */
-.species { background: #3b82f6; }
-.art { background: #10b981; }
-.tool { background: #f59e0b; }
-
-#map { height: 400px; }
-
-.details {
-  margin-top: 20px;
-  padding: 15px;
-  border: 1px solid #ccc;
-  border-radius: 10px;
-}
-
-.controls {
-  margin-bottom: 10px;
-}
-
-.label {
-  background: white;
-  padding: 2px 6px;
-  border-radius: 6px;
-  font-size: 12px;
-  border: 1px solid #ccc;
-}
-</style>
-</head>
-
-<body>
-
-<h1>Frise Chronologique</h1>
-
-<div class="controls">
-  <button onclick="setFilter('all')">Tout</button>
-  <button onclick="setFilter('species')">Espèces</button>
-  <button onclick="setFilter('art')">Art</button>
-  <button onclick="setFilter('tool')">Outils</button>
-</div>
-
-<div class="timeline-container">
-  <div class="timeline" id="timeline"></div>
-</div>
-
-<h1>Carte des sites</h1>
-<div id="map"></div>
-
-<div id="details" class="details">Clique sur un élément</div>
-
-<h2>➕ Ajouter un élément</h2>
-<input id="title" placeholder="Titre"><br><br>
-<input id="year" placeholder="Année (-40000)"><br><br>
-<select id="category">
-  <option value="species">Espèce</option>
-  <option value="art">Art</option>
-  <option value="tool">Outil</option>
-</select><br><br>
-<textarea id="desc" placeholder="Description"></textarea><br><br>
-<button onclick="addEvent()">Ajouter</button>
-
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script src="data.js"></script>
 
 <script>
 let filter = "all";
+
+// === CHARGEMENT LOCAL STORAGE ===
+let savedData = localStorage.getItem("prehistoire");
+
+if (savedData) {
+  const parsed = JSON.parse(savedData);
+  DATA.events = parsed.events || DATA.events;
+  DATA.sites = parsed.sites || DATA.sites;
+}
+
+// === SAUVEGARDE ===
+function saveData() {
+  localStorage.setItem("prehistoire", JSON.stringify(DATA));
+}
 
 // === FRIISE ===
 const timeline = document.getElementById("timeline");
@@ -146,7 +67,7 @@ function renderMap() {
   });
 }
 
-// === DETAILS + LIENS ===
+// === DETAILS ===
 function show(item) {
   let links = "";
 
@@ -160,7 +81,7 @@ function show(item) {
     item.description + links;
 }
 
-// === AJOUT DYNAMIQUE ===
+// === AJOUT ===
 function addEvent() {
   const newEvent = {
     title: document.getElementById("title").value,
@@ -170,6 +91,9 @@ function addEvent() {
   };
 
   DATA.events.push(newEvent);
+
+  saveData(); // 🔥 sauvegarde automatique
+
   renderTimeline();
 }
 
@@ -177,6 +101,3 @@ function addEvent() {
 renderTimeline();
 renderMap();
 </script>
-
-</body>
-</html>
