@@ -3,40 +3,105 @@
 <head>
   <meta charset="UTF-8">
   <title>Préhistoire Interactive</title>
+
+  <!-- Leaflet (carte) -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+
   <style>
     body { font-family: Arial; margin: 0; padding: 20px; }
-    .timeline { display: flex; overflow-x: auto; gap: 20px; padding: 20px 0; }
-    .event { padding: 10px 20px; background: #eee; border-radius: 10px; cursor: pointer; }
-    .map { margin-top: 40px; }
-    .point { cursor: pointer; color: blue; }
-    .details { margin-top: 20px; padding: 20px; border: 1px solid #ccc; border-radius: 10px; }
+
+    /* FRIIIISE */
+    .timeline {
+      position: relative;
+      height: 120px;
+      border-bottom: 3px solid black;
+      margin-bottom: 40px;
+    }
+
+    .event {
+      position: absolute;
+      top: 40px;
+      transform: translateX(-50%);
+      background: #eee;
+      padding: 10px;
+      border-radius: 10px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    /* CARTE */
+    #map {
+      height: 400px;
+      margin-top: 20px;
+    }
+
+    .details {
+      margin-top: 20px;
+      padding: 20px;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+    }
   </style>
 </head>
 <body>
 
 <h1>Frise Chronologique</h1>
-<div class="timeline">
-  <div class="event" onclick="show('neandertal')">-40 000</div>
-  <div class="event" onclick="show('sapiens')">-300 000</div>
-</div>
+
+<div class="timeline" id="timeline"></div>
 
 <h1>Carte des sites</h1>
-<div class="map">
-  <div class="point" onclick="show('lascaux')">📍 Lascaux (France)</div><br>
-  <div class="point" onclick="show('chauvet')">📍 Chauvet (France)</div>
-</div>
+<div id="map"></div>
 
 <div id="details" class="details"></div>
 
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
 <script>
-function show(id) {
-  const data = {
-    neandertal: "Extinction des Néandertaliens : hypothèses = climat, compétition, hybridation.",
-    sapiens: "Homo sapiens : origine africaine, développement culturel.",
-    lascaux: "Lascaux (~17 000 ans) : peintures rupestres très détaillées.",
-    chauvet: "Chauvet (~36 000 ans) : art parmi les plus anciens connus."
-  };
-  document.getElementById("details").innerText = data[id];
+// === DONNÉES ===
+const events = [
+  { year: -300000, title: "Homo sapiens", text: "Apparition en Afrique." },
+  { year: -40000, title: "Néandertal disparaît", text: "Climat, compétition, hybridation." }
+];
+
+const sites = [
+  { name: "Lascaux", coords: [45.053, 1.166], text: "~17 000 ans, peintures." },
+  { name: "Chauvet", coords: [44.396, 4.416], text: "~36 000 ans, art ancien." }
+];
+
+// === FRIISE ===
+const timeline = document.getElementById("timeline");
+
+const minYear = -300000;
+const maxYear = 0;
+
+events.forEach(e => {
+  const percent = (e.year - minYear) / (maxYear - minYear);
+
+  const div = document.createElement("div");
+  div.className = "event";
+  div.style.left = (percent * 100) + "%";
+  div.innerText = e.title;
+
+  div.onclick = () => show(e.text);
+
+  timeline.appendChild(div);
+});
+
+// === CARTE ===
+const map = L.map('map').setView([46.5, 2], 5);
+
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  attribution: ''
+}).addTo(map);
+
+sites.forEach(site => {
+  const marker = L.marker(site.coords).addTo(map);
+  marker.on('click', () => show(site.text));
+});
+
+// === DETAILS ===
+function show(text) {
+  document.getElementById("details").innerText = text;
 }
 </script>
 
