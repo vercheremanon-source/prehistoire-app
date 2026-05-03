@@ -3,11 +3,13 @@ const DATA = {
     {
       year: -300000,
       title: "Homo sapiens",
+       category: "species",
       description: "Apparition en Afrique, développement culturel."
     },
     {
       year: -40000,
       title: "Disparition Néandertal",
+       category: "species",
       description: "Climat, compétition avec sapiens, hybridation."
     }
   ],
