@@ -4,18 +4,21 @@
   <meta charset="UTF-8">
   <title>Préhistoire Interactive</title>
 
-  <!-- Leaflet (carte) -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
 
   <style>
     body { font-family: Arial; margin: 0; padding: 20px; }
 
-    /* FRIIIISE */
+    .timeline-container {
+      overflow-x: auto;
+      border-bottom: 3px solid black;
+      margin-bottom: 30px;
+    }
+
     .timeline {
       position: relative;
       height: 120px;
-      border-bottom: 3px solid black;
-      margin-bottom: 40px;
+      width: 2000px;
     }
 
     .event {
@@ -23,23 +26,29 @@
       top: 40px;
       transform: translateX(-50%);
       background: #eee;
-      padding: 10px;
+      padding: 8px 12px;
       border-radius: 10px;
       cursor: pointer;
-      white-space: nowrap;
+      font-size: 14px;
     }
 
-    /* CARTE */
     #map {
       height: 400px;
-      margin-top: 20px;
     }
 
     .details {
       margin-top: 20px;
-      padding: 20px;
+      padding: 15px;
       border: 1px solid #ccc;
       border-radius: 10px;
+    }
+
+    .label {
+      background: white;
+      padding: 2px 6px;
+      border-radius: 6px;
+      font-size: 12px;
+      border: 1px solid #ccc;
     }
   </style>
 </head>
@@ -47,34 +56,26 @@
 
 <h1>Frise Chronologique</h1>
 
-<div class="timeline" id="timeline"></div>
+<div class="timeline-container">
+  <div class="timeline" id="timeline"></div>
+</div>
 
 <h1>Carte des sites</h1>
 <div id="map"></div>
 
-<div id="details" class="details"></div>
+<div id="details" class="details">Clique sur un élément</div>
 
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script src="data.js"></script>
 
 <script>
-// === DONNÉES ===
-const events = [
-  { year: -300000, title: "Homo sapiens", text: "Apparition en Afrique." },
-  { year: -40000, title: "Néandertal disparaît", text: "Climat, compétition, hybridation." }
-];
-
-const sites = [
-  { name: "Lascaux", coords: [45.053, 1.166], text: "~17 000 ans, peintures." },
-  { name: "Chauvet", coords: [44.396, 4.416], text: "~36 000 ans, art ancien." }
-];
-
 // === FRIISE ===
 const timeline = document.getElementById("timeline");
 
 const minYear = -300000;
 const maxYear = 0;
 
-events.forEach(e => {
+DATA.events.forEach(e => {
   const percent = (e.year - minYear) / (maxYear - minYear);
 
   const div = document.createElement("div");
@@ -82,7 +83,7 @@ events.forEach(e => {
   div.style.left = (percent * 100) + "%";
   div.innerText = e.title;
 
-  div.onclick = () => show(e.text);
+  div.onclick = () => show(e.title, e.description);
 
   timeline.appendChild(div);
 });
@@ -90,18 +91,20 @@ events.forEach(e => {
 // === CARTE ===
 const map = L.map('map').setView([46.5, 2], 5);
 
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-  attribution: ''
-}).addTo(map);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
-sites.forEach(site => {
+DATA.sites.forEach(site => {
   const marker = L.marker(site.coords).addTo(map);
-  marker.on('click', () => show(site.text));
+
+  // NOM TOUJOURS VISIBLE
+  marker.bindTooltip(site.name, { permanent: true, direction: 'right', className: 'label' });
+
+  marker.on('click', () => show(site.name, site.description));
 });
 
 // === DETAILS ===
-function show(text) {
-  document.getElementById("details").innerText = text;
+function show(title, text) {
+  document.getElementById("details").innerHTML = `<strong>${title}</strong><br>${text}`;
 }
 </script>
 
