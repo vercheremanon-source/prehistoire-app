@@ -1,60 +1,75 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <title>Préhistoire Interactive</title>
+<meta charset="UTF-8">
+<title>Préhistoire Interactive</title>
 
-  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
 
-  <style>
-    body { font-family: Arial; margin: 0; padding: 20px; }
+<style>
+body { font-family: Arial; margin: 0; padding: 20px; }
 
-    .timeline-container {
-      overflow-x: auto;
-      border-bottom: 3px solid black;
-      margin-bottom: 30px;
-    }
+.timeline-container {
+  overflow-x: auto;
+  border-bottom: 3px solid black;
+  margin-bottom: 20px;
+}
 
-    .timeline {
-      position: relative;
-      height: 120px;
-      width: 2000px;
-    }
+.timeline {
+  position: relative;
+  height: 120px;
+  width: 2000px;
+}
 
-    .event {
-      position: absolute;
-      top: 40px;
-      transform: translateX(-50%);
-      background: #eee;
-      padding: 8px 12px;
-      border-radius: 10px;
-      cursor: pointer;
-      font-size: 14px;
-    }
+.event {
+  position: absolute;
+  top: 40px;
+  transform: translateX(-50%);
+  padding: 6px 10px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 13px;
+  color: white;
+}
 
-    #map {
-      height: 400px;
-    }
+/* couleurs */
+.species { background: #3b82f6; }
+.art { background: #10b981; }
+.tool { background: #f59e0b; }
 
-    .details {
-      margin-top: 20px;
-      padding: 15px;
-      border: 1px solid #ccc;
-      border-radius: 10px;
-    }
+#map { height: 400px; }
 
-    .label {
-      background: white;
-      padding: 2px 6px;
-      border-radius: 6px;
-      font-size: 12px;
-      border: 1px solid #ccc;
-    }
-  </style>
+.details {
+  margin-top: 20px;
+  padding: 15px;
+  border: 1px solid #ccc;
+  border-radius: 10px;
+}
+
+.controls {
+  margin-bottom: 10px;
+}
+
+.label {
+  background: white;
+  padding: 2px 6px;
+  border-radius: 6px;
+  font-size: 12px;
+  border: 1px solid #ccc;
+}
+</style>
 </head>
+
 <body>
 
 <h1>Frise Chronologique</h1>
+
+<div class="controls">
+  <button onclick="setFilter('all')">Tout</button>
+  <button onclick="setFilter('species')">Espèces</button>
+  <button onclick="setFilter('art')">Art</button>
+  <button onclick="setFilter('tool')">Outils</button>
+</div>
 
 <div class="timeline-container">
   <div class="timeline" id="timeline"></div>
@@ -65,47 +80,102 @@
 
 <div id="details" class="details">Clique sur un élément</div>
 
+<h2>➕ Ajouter un élément</h2>
+<input id="title" placeholder="Titre"><br><br>
+<input id="year" placeholder="Année (-40000)"><br><br>
+<select id="category">
+  <option value="species">Espèce</option>
+  <option value="art">Art</option>
+  <option value="tool">Outil</option>
+</select><br><br>
+<textarea id="desc" placeholder="Description"></textarea><br><br>
+<button onclick="addEvent()">Ajouter</button>
+
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script src="data.js"></script>
 
 <script>
+let filter = "all";
+
 // === FRIISE ===
 const timeline = document.getElementById("timeline");
-
 const minYear = -300000;
 const maxYear = 0;
 
-DATA.events.forEach(e => {
-  const percent = (e.year - minYear) / (maxYear - minYear);
+function renderTimeline() {
+  timeline.innerHTML = "";
 
-  const div = document.createElement("div");
-  div.className = "event";
-  div.style.left = (percent * 100) + "%";
-  div.innerText = e.title;
+  DATA.events.forEach(e => {
 
-  div.onclick = () => show(e.title, e.description);
+    if (filter !== "all" && e.category !== filter) return;
 
-  timeline.appendChild(div);
-});
+    const percent = (e.year - minYear) / (maxYear - minYear);
+
+    const div = document.createElement("div");
+    div.className = "event " + e.category;
+    div.style.left = (percent * 100) + "%";
+    div.innerText = e.title;
+
+    div.onclick = () => show(e);
+
+    timeline.appendChild(div);
+  });
+}
+
+function setFilter(f) {
+  filter = f;
+  renderTimeline();
+}
 
 // === CARTE ===
 const map = L.map('map').setView([46.5, 2], 5);
 
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
-DATA.sites.forEach(site => {
-  const marker = L.marker(site.coords).addTo(map);
+function renderMap() {
+  DATA.sites.forEach(site => {
+    const marker = L.marker(site.coords).addTo(map);
 
-  // NOM TOUJOURS VISIBLE
-  marker.bindTooltip(site.name, { permanent: true, direction: 'right', className: 'label' });
+    marker.bindTooltip(site.name, {
+      permanent: true,
+      direction: 'right',
+      className: 'label'
+    });
 
-  marker.on('click', () => show(site.name, site.description));
-});
-
-// === DETAILS ===
-function show(title, text) {
-  document.getElementById("details").innerHTML = `<strong>${title}</strong><br>${text}`;
+    marker.on('click', () => show(site));
+  });
 }
+
+// === DETAILS + LIENS ===
+function show(item) {
+  let links = "";
+
+  if (item.links) {
+    links = "<br><br><strong>Liens :</strong><br>" +
+      item.links.map(l => "→ " + l).join("<br>");
+  }
+
+  document.getElementById("details").innerHTML =
+    "<strong>" + item.title + "</strong><br>" +
+    item.description + links;
+}
+
+// === AJOUT DYNAMIQUE ===
+function addEvent() {
+  const newEvent = {
+    title: document.getElementById("title").value,
+    year: parseInt(document.getElementById("year").value),
+    category: document.getElementById("category").value,
+    description: document.getElementById("desc").value
+  };
+
+  DATA.events.push(newEvent);
+  renderTimeline();
+}
+
+// === INIT ===
+renderTimeline();
+renderMap();
 </script>
 
 </body>
